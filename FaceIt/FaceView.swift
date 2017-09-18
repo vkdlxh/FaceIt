@@ -12,14 +12,19 @@ class FaceView: UIView {
     
     // 두개골의 스케일 조절(90% 크기 유지)
     var scale: CGFloat = 0.90
-    
+    var mouthCurature: Double = 1.0 // 입 굽은 비율. 1 함박웃음, -1 완전 찡그림
+    var eyesOpen: Bool = false
+    var eyeBrowTilt:Double = 0.0    // 눈썹 기울기. 1 눈썹 완전히 펴짐, -1 완전 찡그림
+    var color: UIColor = UIColor.blueColor()
+    var lineWidth: CGFloat = 5.0
+
     // bounds : 본인의 좌표시스템 안에서 그릴 직사각형
     // radius(반경) : View의 넓이와 높이의 최소값과 같게 한다
-    var skullRadius : CGFloat {
+    private var skullRadius : CGFloat {
         return min(bounds.size.width, bounds.size.height) / 2 * scale // 2를 나누는 것은 반지름
     }
     // 얼굴(skull)의 중앙(center)
-    var skullCenter: CGPoint {
+    private var skullCenter: CGPoint {
         return CGPoint(x: bounds.midX, y: bounds.midY)
     }
     // 값을 가져오기만 하는 Computed Property라면 get {}을 쓸 필요가 없다.
@@ -31,6 +36,7 @@ class FaceView: UIView {
         static let SkullRadiusToMouthWidth: CGFloat = 1     // 입 너비
         static let SkullRadiusToMouthHeight: CGFloat = 3    // 입 높이
         static let SkullRadiusToMouthOffset: CGFloat = 3    // 두개골반경에서 입 사이의 비율
+        static let SkullRadiusToBrowOffset: CGFloat = 5     // 두개골반경에서 눈썹의 상대적 위치
     }
     
     private enum Eye {
@@ -46,7 +52,7 @@ class FaceView: UIView {
             endAngle: CGFloat(2*M_PI), // radians(라디안, 호도법) : 원 하나를 그릴때 0에서 2π 사이의 값으로 표기
             clockwise: false
         )
-        path.lineWidth = 5.0 // lineWidth : 선굵기
+        path.lineWidth = lineWidth // lineWidth : 선굵기
         return path
     }
     
@@ -65,15 +71,70 @@ class FaceView: UIView {
         // 눈의 반경
         let eyeRadius = skullRadius / Ratios.SkullRadiusToEyeRadius
         let eyeCenter = getEyeCenter(eye)
-        return pathForCircleCenteredAtPoint(eyeCenter, withRadius: eyeRadius)
+        if eyesOpen {   // 눈을 뜨고 있을 때
+            return pathForCircleCenteredAtPoint(eyeCenter, withRadius: eyeRadius)
+        } else {        // 눈을 감고 있을 때 : 선을 사용
+            let path = UIBezierPath()
+            path.moveToPoint(CGPoint(x: eyeCenter.x - eyeRadius, y: eyeCenter.y))
+            path.addLineToPoint(CGPoint(x: eyeCenter.x + eyeRadius, y: eyeCenter.y))
+            path.lineWidth = lineWidth
+            return path
+        }
+        
+    }
+    
+    private func pathForMouth() -> UIBezierPath {
+        let mouthWidth = skullRadius / Ratios.SkullRadiusToMouthWidth
+        let mouthHeight = skullRadius / Ratios.SkullRadiusToMouthHeight
+        let mouthOffset = skullRadius / Ratios.SkullRadiusToMouthOffset
+        
+        // 입을 담을 사각형
+        let mouthRect = CGRect(x: skullCenter.x - mouthWidth/2, y: skullCenter.y + mouthOffset, width: mouthWidth, height: mouthHeight)
+        
+        let smileOffset = CGFloat(max(-1, min(mouthCurature, 1))) * mouthRect.height
+        let start = CGPoint(x: mouthRect.minX, y: mouthRect.minY)
+        let end = CGPoint(x: mouthRect.maxX, y: mouthRect.minY)
+        let cp1 = CGPoint(x: mouthRect.minX + mouthRect.width / 3, y: mouthRect.minY + smileOffset)
+        let cp2 = CGPoint(x: mouthRect.maxX - mouthRect.width / 3, y: mouthRect.minY + smileOffset)
+        // 커브포인트(cp)는 밑변의 1/3 지점이니까 /3을 함.
+        
+        let path = UIBezierPath()
+        path.moveToPoint(start) // 시작 포인트
+        path.addCurveToPoint(end, controlPoint1: cp1, controlPoint2: cp2)
+        path.lineWidth = lineWidth
+        
+        return path
+    }
+    
+    private func pathForBrow(eye: Eye) -> UIBezierPath {
+        var tilt = eyeBrowTilt
+        switch eye {
+        case .Left: tilt *= -1.0
+        case .Right: break
+        }
+        var browCenter = getEyeCenter(eye)
+        browCenter.y -= skullRadius / Ratios.SkullRadiusToBrowOffset
+        let eyeRadius = skullRadius / Ratios.SkullRadiusToEyeRadius
+        let tiltOffset = CGFloat(max(-1, min(tilt, 1))) * eyeRadius / 2
+        let browStart = CGPoint(x: browCenter.x - eyeRadius, y: browCenter.y - tiltOffset)
+        let browEnd = CGPoint(x: browCenter.x + eyeRadius, y: browCenter.y + tiltOffset)
+        let path = UIBezierPath()
+        path.moveToPoint(browStart)
+        path.addLineToPoint(browEnd)
+        path.lineWidth = lineWidth
+        return path
+        
     }
     
     override func drawRect(rect: CGRect){
 
-        UIColor.blueColor().set() // set()은 setFill, setStroke을 모두 설정하는 것
+        color.set() // set()은 setFill, setStroke을 모두 설정하는 것
         pathForCircleCenteredAtPoint(skullCenter, withRadius: skullRadius).stroke() // 설정에 따라 선을 그림
         pathForEye(.Left).stroke()
         pathForEye(.Right).stroke()
+        pathForMouth().stroke()
+        pathForBrow(.Left).stroke()
+        pathForBrow(.Right).stroke()
     }
 
 }

@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FaceIt/FaceView.swift"
-            timestampString = "527323539.320432"
+            timestampString = "527410919.521299"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "58"
-            endingLineNumber = "58"
+            startingLineNumber = "62"
+            endingLineNumber = "62"
             landmarkName = "getEyeCenter(_:)"
             landmarkType = "5">
          </BreakpointContent>
