@@ -8,15 +8,23 @@
 
 import UIKit
 
+@IBDesignable // 인터페이스 빌더에 자동으로 나타내줌.
 class FaceView: UIView {
     
-    // 두개골의 스케일 조절(90% 크기 유지)
-    var scale: CGFloat = 0.90
-    var mouthCurature: Double = 1.0 // 입 굽은 비율. 1 함박웃음, -1 완전 찡그림
-    var eyesOpen: Bool = false
-    var eyeBrowTilt:Double = 0.0    // 눈썹 기울기. 1 눈썹 완전히 펴짐, -1 완전 찡그림
-    var color: UIColor = UIColor.blueColor()
-    var lineWidth: CGFloat = 5.0
+    @IBInspectable  // Inspector 설정창에서 볼 수 있음 (* IBInspectable는 타입을 추론할 수 없기 때문에 타입을 반드시 명시해줘야함)
+    var scale: CGFloat = 0.90 { didSet { setNeedsDisplay() } } // 프로퍼티 옵저버. setNeedsDisplay는 다시 그림을 요청
+    @IBInspectable
+    var mouthCurature: Double = 1.0 { didSet { setNeedsDisplay() } }
+    // 입 굽은 비율. 1 함박웃음, -1 완전 찡그림
+    @IBInspectable
+    var eyesOpen: Bool = false { didSet { setNeedsDisplay() } }
+    @IBInspectable
+    var eyeBrowTilt:Double = 0.0 { didSet { setNeedsDisplay() } }
+    // 눈썹 기울기. 1 눈썹 완전히 펴짐, -1 완전 찡그림
+    @IBInspectable
+    var color: UIColor = UIColor.blueColor() { didSet { setNeedsDisplay() } }
+    @IBInspectable
+    var lineWidth: CGFloat = 5.0 { didSet { setNeedsDisplay() } }
 
     // bounds : 본인의 좌표시스템 안에서 그릴 직사각형
     // radius(반경) : View의 넓이와 높이의 최소값과 같게 한다
