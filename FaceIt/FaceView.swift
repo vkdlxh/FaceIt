@@ -26,6 +26,16 @@ class FaceView: UIView {
     @IBInspectable
     var lineWidth: CGFloat = 5.0 { didSet { setNeedsDisplay() } }
 
+    func changeScale(recognizer: UIPinchGestureRecognizer) {
+        switch recognizer.state {
+        case .Changed, .Ended:
+            scale *= recognizer.scale
+            recognizer.scale = 1.0
+        default: break
+        }
+    }
+    
+    
     // bounds : 본인의 좌표시스템 안에서 그릴 직사각형
     // radius(반경) : View의 넓이와 높이의 최소값과 같게 한다
     private var skullRadius : CGFloat {
